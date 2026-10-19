@@ -603,15 +603,29 @@ function setupAdmin() {
     const form = $(`#${id}`);
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      const submit = $('button[type="submit"]', form);
+      const feedback = $('.publish-feedback', form);
       const user = auth.currentUser;
       if (!user) {
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.dataset.state = 'error';
+          feedback.textContent = 'Sign in again before publishing.';
+        }
         showStatus('Sign in again before publishing.', true);
         return;
       }
       const formData = new FormData(form);
-      const submit = $('button[type="submit"]', form);
+      const submitContent = submit.innerHTML;
       submit.disabled = true;
-      showStatus('Publishing…');
+      submit.classList.add('is-publishing');
+      submit.innerHTML = '<span class="publish-spinner" aria-hidden="true"></span> Publishing…';
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.dataset.state = 'pending';
+        feedback.textContent = collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing to the site…';
+      }
+      showStatus(collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing…');
       let uploaded;
       try {
         const date = String(formData.get('date') || '');
@@ -628,6 +642,10 @@ function setupAdmin() {
           createdBy: user.uid
         });
         form.reset();
+        if (feedback) {
+          feedback.dataset.state = 'success';
+          feedback.textContent = collectionName === 'products' ? 'Product published and live in the store.' : 'Published and live on the site.';
+        }
         showStatus('Published. It’s live on the site.');
       } catch (error) {
         if (uploaded && uploaded.mediaPath) {
@@ -637,9 +655,15 @@ function setupAdmin() {
             console.error('Could not clean up an unlinked upload:', cleanupError);
           }
         }
+        if (feedback) {
+          feedback.dataset.state = 'error';
+          feedback.textContent = `Could not publish: ${error.message}`;
+        }
         showStatus(`Could not publish: ${error.message}`, true);
       } finally {
         submit.disabled = false;
+        submit.classList.remove('is-publishing');
+        submit.innerHTML = submitContent;
       }
     });
   });

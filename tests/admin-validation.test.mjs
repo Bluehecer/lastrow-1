@@ -36,3 +36,16 @@ test('admin forms and shared submit handler use collection-scoped date validatio
   assert.ok(productForm, 'product form exists');
   assert.doesNotMatch(productForm, /name="date"/);
 });
+
+test('publishing shows an animated in-form progress state and reports the result', () => {
+  for (const formId of ['eventForm', 'newsForm', 'productForm']) {
+    const form = adminHtml.match(new RegExp(`<form id="${formId}"[\\s\\S]*?<\\/form>`))?.[0];
+    assert.ok(form, `${formId} exists`);
+    assert.match(form, /class="publish-feedback full-field" role="status" aria-live="polite" hidden/);
+  }
+
+  assert.match(script, /classList\.add\('is-publishing'\)/);
+  assert.match(script, /class="publish-spinner" aria-hidden="true"/);
+  assert.match(script, /Product published and live in the store\./);
+  assert.match(script, /feedback\.textContent = `Could not publish: \$\{error\.message\}`/);
+});
