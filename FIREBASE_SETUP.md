@@ -14,6 +14,7 @@ The site uses Firebase Authentication, Cloud Firestore, and Cloud Storage. The F
    ```powershell
    firebase deploy --only firestore:rules,storage
    ```
+   The Storage rules check the same `adminRequests/{uid}.approved` Firestore record as the portal. Firebase may prompt you to enable the required cross-service permissions between Cloud Storage and Firestore; approve that prompt for uploads and deletes to use the portal's admin approvals.
 4. To grant the first admin, open **Firestore Database → Data**. Create or open the `adminRequests` collection, then create a document whose ID is that account's Firebase Authentication UID. Add fields: `uid` (string, same UID), `email` (string), `approved` (boolean `true`), and `requestedAt` (timestamp). If the account has already requested access, open its existing document and change `approved` from `false` to `true`.
 5. Sign in to the admin page with that account and refresh the page. The approved document is the admin role.
 6. Other people can create an account or sign in with an existing Firebase Authentication account, then request access. An existing admin approves requests in **Pending approvals**. The user should refresh the portal after approval.
@@ -21,7 +22,7 @@ The site uses Firebase Authentication, Cloud Firestore, and Cloud Storage. The F
 
 An approved `adminRequests/{uid}` document is the role record. Website users can create only their own requests with `approved: false`; they cannot approve themselves. Existing admins can approve requests in the portal, and a project owner can grant the first admin directly in Firebase Console. Approval grants full admin access (publishing, deleting content, editing crew profiles, and approving further accounts), so only approve people you trust.
 
-Firestore and Storage rules permit public reads of published content and restrict writes/uploads to admins. Admins can manage crew profiles, including photos, from the portal. Uploaded media is limited to 50 MB. The store is a catalog; checkout and payment processing are not included.
+Firestore and Storage rules permit public reads of published content and restrict writes/uploads to approved admins. Storage checks the approved `adminRequests/{uid}` record server-side; it does not rely on client-provided state or an Authentication custom claim. Admins can manage crew profiles, including photos, from the portal. Uploaded media is limited to 50 MB. The store is a catalog; checkout and payment processing are not included.
 
 ## Managing the crew page
 

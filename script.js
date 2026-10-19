@@ -1,4 +1,5 @@
 import { firebaseConfig } from './firebase-config.js';
+import { escapeDate, validatePublishingDate } from './admin-validation.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import {
   createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
@@ -20,7 +21,6 @@ let contentUnsubscribes = [];
 let approvalUnsubscribe;
 
 const $ = (selector, root = document) => root.querySelector(selector);
-const escapeDate = (value) => /^\d{4}-\d{2}-\d{2}$/.test(value || '');
 
 function showStatus(message, isError = false) {
   const status = $('#adminStatus');
@@ -606,7 +606,7 @@ function setupAdmin() {
       let uploaded;
       try {
         const date = String(formData.get('date') || '');
-        if (!escapeDate(date)) throw new Error('Choose a valid date.');
+        validatePublishingDate(collectionName, date);
         const payload = Object.fromEntries(fields.map((field) => [field, String(formData.get(field) || '').trim()]));
         if (collectionName === 'products') payload.price = Number(formData.get('price'));
         if (collectionName === 'products' && (!Number.isFinite(payload.price) || payload.price < 0)) throw new Error('Enter a valid price.');
