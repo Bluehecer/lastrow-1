@@ -1,6 +1,7 @@
 import { firebaseConfig } from './firebase-config.js';
 import { escapeDate, validatePublishingDate } from './admin-validation.mjs';
 import { deletePublishedContent } from './admin-delete.mjs';
+import { publishRecordWithOptionalMedia } from './admin-publish.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import {
   createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
@@ -637,7 +638,6 @@ function setupAdmin() {
         if (feedback) feedback.textContent = message;
         showStatus(message);
       }, 20000);
-      let uploaded;
       try {
         const date = String(formData.get('date') || '');
         validatePublishingDate(collectionName, date);
@@ -646,41 +646,51 @@ function setupAdmin() {
         if (collectionName === 'products' && (!Number.isFinite(payload.price) || payload.price < 0)) throw new Error('Enter a valid price.');
         const file = formData.get('media');
         const mediaFile = file instanceof File && file.size ? file : null;
-        if (mediaFile) {
-          publishingStage = 'uploading your photo';
-          const updateUploadProgress = (transferred, total) => {
-            const percentage = Math.floor(transferred / total * 100);
-            const message = `Uploading photo… ${percentage}%`;
-            if (feedback) feedback.textContent = message;
-            showStatus(message);
-          };
-          updateUploadProgress(0, mediaFile.size);
-          uploaded = await uploadMedia(mediaFile, user.uid, updateUploadProgress);
-        }
         publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
         const savingMessage = collectionName === 'products' ? 'Saving product to the store…' : 'Saving to the site…';
         if (feedback) feedback.textContent = savingMessage;
         showStatus(savingMessage);
-        await addDoc(collection(db, collectionName), {
-          ...payload,
-          ...uploaded,
-          createdAt: serverTimestamp(),
-          createdBy: user.uid
-        });
+        const result = await publishRecordWithOptionalMedia(
+          () => addDoc(collection(db, collectionName), {
+            ...payload,
+            createdAt: serverTimestamp(),
+            createdBy: user.uid
+          }),
+          Boolean(mediaFile),
+          async () => {
+            publishingStage = 'uploading your photo';
+            const updateUploadProgress = (transferred, total) => {
+              const percentage = Math.floor(transferred / total * 100);
+              const message = `Uploading photo… ${percentage}%`;
+              if (feedback) feedback.textContent = message;
+              showStatus(message);
+            };
+            updateUploadProgress(0, mediaFile.size);
+            return uploadMedia(mediaFile, user.uid, updateUploadProgress);
+          },
+          (record, media) => {
+            publishingStage = collectionName === 'products' ? 'adding the photo to your product' : 'adding the media to your post';
+            return updateDoc(record, media);
+          },
+          (media) => deleteObject(ref(storage, media.mediaPath))
+        );
         form.reset();
+        if (result.mediaError) {
+          const cleanupNote = result.cleanupError ? ` Media cleanup also failed: ${result.cleanupError.message}.` : '';
+          const message = `${collectionName === 'products' ? 'Product' : 'Content'} published, but its photo or video could not be attached: ${result.mediaError.message}.${cleanupNote}`;
+          if (feedback) {
+            feedback.dataset.state = 'error';
+            feedback.textContent = message;
+          }
+          showStatus(message, true);
+          return;
+        }
         if (feedback) {
           feedback.dataset.state = 'success';
           feedback.textContent = collectionName === 'products' ? 'Product published and live in the store.' : 'Published and live on the site.';
         }
         showStatus('Published. It’s live on the site.');
       } catch (error) {
-        if (uploaded && uploaded.mediaPath) {
-          try {
-            await deleteObject(ref(storage, uploaded.mediaPath));
-          } catch (cleanupError) {
-            console.error('Could not clean up an unlinked upload:', cleanupError);
-          }
-        }
         if (feedback) {
           feedback.dataset.state = 'error';
           feedback.textContent = `Could not publish: ${error.message}`;

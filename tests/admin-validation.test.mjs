@@ -52,4 +52,6 @@ test('publishing shows an animated in-form progress state and reports the result
   assert.match(script, /Uploading photo… \$\{percentage\}%/);
   assert.match(script, /Saving product to the store…/);
   assert.match(script, /Keep this page open and don’t click again yet\./);
+  assert.match(script, /published, but its photo or video could not be attached/);
+  assert.match(script, /publishRecordWithOptionalMedia/);
 });
