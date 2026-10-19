@@ -1,5 +1,6 @@
 import { firebaseConfig } from './firebase-config.js';
 import { escapeDate, validatePublishingDate } from './admin-validation.mjs';
+import { deletePublishedContent } from './admin-delete.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import {
   createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
@@ -190,18 +191,26 @@ function renderManageList(collectionName, items, target) {
   items.forEach((item) => {
     const row = element('div', 'manage-row');
     row.append(element('span', '', item.title));
-    const button = element('button', 'delete-button', 'Remove');
+    const button = element('button', 'delete-button', 'Delete');
     button.type = 'button';
     button.addEventListener('click', async () => {
-      if (!window.confirm(`Remove “${item.title}”?`)) return;
+      if (!window.confirm(`Delete “${item.title}” from the site?`)) return;
       button.disabled = true;
       try {
-        if (item.mediaPath) await deleteObject(ref(storage, item.mediaPath));
-        await deleteDoc(doc(db, collectionName, item.id));
+        const cleanupError = await deletePublishedContent(
+          () => deleteDoc(doc(db, collectionName, item.id)),
+          item.mediaPath,
+          (mediaPath) => deleteObject(ref(storage, mediaPath))
+        );
+        if (cleanupError) {
+          console.error('Published content was deleted, but its media could not be cleaned up:', cleanupError);
+          showStatus(`“${item.title}” was deleted, but its image or video could not be cleaned up: ${cleanupError.message}`, true);
+          return;
+        }
         showStatus('Content removed.');
       } catch (error) {
         button.disabled = false;
-        showStatus(`Could not remove content: ${error.message}`, true);
+        showStatus(`Could not delete content: ${error.message}`, true);
       }
     });
     row.append(button);
