@@ -48,4 +48,8 @@ test('publishing shows an animated in-form progress state and reports the result
   assert.match(script, /class="publish-spinner" aria-hidden="true"/);
   assert.match(script, /Product published and live in the store\./);
   assert.match(script, /feedback\.textContent = `Could not publish: \$\{error\.message\}`/);
+  assert.match(script, /uploadBytesResumable/);
+  assert.match(script, /Uploading photo… \$\{percentage\}%/);
+  assert.match(script, /Saving product to the store…/);
+  assert.match(script, /Keep this page open and don’t click again yet\./);
 });

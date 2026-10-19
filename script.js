@@ -9,7 +9,7 @@ import {
   addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import {
-  deleteObject, getDownloadURL, getStorage, ref, uploadBytes
+  deleteObject, getDownloadURL, getStorage, ref, uploadBytesResumable
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js';
 
 const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
@@ -480,14 +480,19 @@ function stopContentSubscriptions() {
   contentUnsubscribes = [];
 }
 
-async function uploadMedia(file, userId) {
+async function uploadMedia(file, userId, onProgress) {
   if (!file) return {};
   if (file.size > MAX_MEDIA_BYTES) throw new Error('Please choose a photo or video smaller than 50 MB.');
   if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) throw new Error('Choose an image or video file.');
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const mediaPath = `uploads/${userId}/${Date.now()}-${safeName}`;
   const mediaRef = ref(storage, mediaPath);
-  await uploadBytes(mediaRef, file, { contentType: file.type });
+  const uploadTask = uploadBytesResumable(mediaRef, file, { contentType: file.type });
+  await new Promise((resolve, reject) => {
+    uploadTask.on('state_changed', (snapshot) => {
+      onProgress?.(snapshot.bytesTransferred, snapshot.totalBytes);
+    }, reject, resolve);
+  });
   return { mediaUrl: await getDownloadURL(mediaRef), mediaPath, mediaType: file.type };
 }
 
@@ -626,6 +631,12 @@ function setupAdmin() {
         feedback.textContent = collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing to the site…';
       }
       showStatus(collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing…');
+      let publishingStage = 'publishing';
+      const slowPublishTimer = window.setTimeout(() => {
+        const message = `Still ${publishingStage}—Firebase is taking longer than expected. Keep this page open and don’t click again yet.`;
+        if (feedback) feedback.textContent = message;
+        showStatus(message);
+      }, 20000);
       let uploaded;
       try {
         const date = String(formData.get('date') || '');
@@ -634,7 +645,22 @@ function setupAdmin() {
         if (collectionName === 'products') payload.price = Number(formData.get('price'));
         if (collectionName === 'products' && (!Number.isFinite(payload.price) || payload.price < 0)) throw new Error('Enter a valid price.');
         const file = formData.get('media');
-        uploaded = await uploadMedia(file instanceof File && file.size ? file : null, user.uid);
+        const mediaFile = file instanceof File && file.size ? file : null;
+        if (mediaFile) {
+          publishingStage = 'uploading your photo';
+          const updateUploadProgress = (transferred, total) => {
+            const percentage = Math.floor(transferred / total * 100);
+            const message = `Uploading photo… ${percentage}%`;
+            if (feedback) feedback.textContent = message;
+            showStatus(message);
+          };
+          updateUploadProgress(0, mediaFile.size);
+          uploaded = await uploadMedia(mediaFile, user.uid, updateUploadProgress);
+        }
+        publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
+        const savingMessage = collectionName === 'products' ? 'Saving product to the store…' : 'Saving to the site…';
+        if (feedback) feedback.textContent = savingMessage;
+        showStatus(savingMessage);
         await addDoc(collection(db, collectionName), {
           ...payload,
           ...uploaded,
@@ -661,6 +687,7 @@ function setupAdmin() {
         }
         showStatus(`Could not publish: ${error.message}`, true);
       } finally {
+        window.clearTimeout(slowPublishTimer);
         submit.disabled = false;
         submit.classList.remove('is-publishing');
         submit.innerHTML = submitContent;
