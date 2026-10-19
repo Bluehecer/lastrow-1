@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090d" />
+  <title>Admin studio — Last Row</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Last Row home"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a>
+      <nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">Our story</a><a href="activities.html">Activities</a><a href="store.html">Store</a><a href="committee.html">The crew</a></nav>
+      <a class="nav-admin active" href="admin.html">Admin studio <span aria-hidden="true">↗</span></a>
+    </header>
+    <main class="page-main admin-main">
+      <section class="page-hero admin-hero"><span class="eyebrow">Just for the crew</span><h1>Admin<br /><em>studio.</em></h1><p>Sign in to post plans, share the latest, and add new things to the store.</p></section>
+      <div class="admin-notice" id="adminStatus" role="status" aria-live="polite">Connecting to Firebase…</div>
+      <section class="admin-login-card" id="loginPanel">
+        <span class="eyebrow">CREW ACCESS</span><h2>Sign in.</h2><p>Members can sign in here or create an account to request access.</p>
+        <form id="loginForm" class="form-grid">
+          <label>Email address<input name="email" type="email" autocomplete="username" required /></label>
+          <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+          <button class="btn btn-primary" type="submit">Sign in <span>↗</span></button>
+          <button class="btn btn-outline" id="createAccountButton" type="button">Create account</button>
+        </form>
+      </section>
+      <section class="admin-login-card access-request-card" id="accessPanel" hidden>
+        <span class="eyebrow">ACCOUNT ACCESS</span><h2 id="accessHeading">Request portal access.</h2>
+        <p id="accessMessage">Your account is signed in. Send an access request to an existing admin. They can approve it here.</p>
+        <button class="btn btn-primary" id="requestAccessButton" type="button">Request access <span>↗</span></button>
+        <button class="btn btn-outline" id="accessLogoutButton" type="button">Sign out</button>
+      </section>
+      <section class="admin-dashboard" id="adminDashboard" hidden>
+        <div class="dashboard-heading"><div><span class="eyebrow">Your little corner of the site</span><h2>Hey, admin<span class="brand-dot">.</span></h2></div><button class="btn btn-outline" type="button" id="logoutButton">Sign out</button></div>
+        <div class="admin-columns">
+          <section class="admin-panel">
+            <span class="eyebrow">Put it on the calendar</span><h2>Add an event</h2>
+            <form id="eventForm" class="form-grid">
+              <label>Event name<input name="title" maxlength="100" required /></label>
+              <label>When<input name="date" type="date" required /></label>
+              <label>Time (optional)<input name="time" type="time" /></label>
+              <label>Where<input name="location" maxlength="120" /></label>
+              <label class="full-field">A few details<textarea name="description" rows="3" maxlength="1000" required></textarea></label>
+              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB.</small></label>
+              <button class="btn btn-primary" type="submit">Publish event <span>↗</span></button>
+            </form>
+          </section>
+          <section class="admin-panel">
+            <span class="eyebrow">A note from us</span><h2>Post an update</h2>
+            <form id="newsForm" class="form-grid">
+              <label>Headline<input name="title" maxlength="100" required /></label>
+              <label>Date<input name="date" type="date" required /></label>
+              <label class="full-field">What’s the story?<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
+              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB.</small></label>
+              <button class="btn btn-primary" type="submit">Share update <span>↗</span></button>
+            </form>
+          </section>
+          <section class="admin-panel">
+            <span class="eyebrow">Something for the shop</span><h2>Add a product</h2>
+            <form id="productForm" class="form-grid">
+              <label>Product name<input name="title" maxlength="100" required /></label>
+              <label>Price<input name="price" type="number" min="0" step="0.01" required /></label>
+              <label class="full-field">Description<textarea name="description" rows="3" maxlength="1000" required></textarea></label>
+              <label class="full-field">Product photo (optional)<input name="media" type="file" accept="image/*" /><small>Images up to 50 MB.</small></label>
+              <button class="btn btn-primary" type="submit">Add to store <span>↗</span></button>
+            </form>
+          </section>
+          <section class="admin-panel">
+            <span class="eyebrow">The people behind Last Row</span><h2 id="crewFormTitle">Add a crew member</h2>
+            <form id="crewForm" class="form-grid">
+              <input name="memberId" type="hidden" />
+              <label>Name<input name="name" maxlength="80" required /></label>
+              <label>Role or nickname<input name="role" maxlength="80" required /></label>
+              <label class="full-field">Short bio<textarea name="bio" rows="3" maxlength="500" required></textarea></label>
+              <label>Display order<input name="position" type="number" min="0" step="1" value="0" required /><small>Lower numbers appear first.</small></label>
+              <label>Photo (optional)<input name="media" type="file" accept="image/*" /><small>Choose an image up to 50 MB.</small></label>
+              <button class="btn btn-primary" id="saveCrewButton" type="submit">Add to the crew</button>
+              <button class="btn btn-outline" id="cancelCrewEdit" type="button" hidden>Cancel edit</button>
+            </form>
+          </section>
+        </div>
+        <section class="admin-panel approvals-panel"><span class="eyebrow">CREW ACCESS</span><h2>Pending approvals</h2><div id="pendingApprovals"><p class="muted-copy">Loading requests…</p></div></section>
+        <section class="admin-panel manage-panel"><span class="eyebrow">CONTENT</span><h2>Published items</h2><div class="manage-grid"><div><h3>Events</h3><div id="manageEvents"></div></div><div><h3>Updates</h3><div id="manageNews"></div></div><div><h3>Store</h3><div id="manageProducts"></div></div><div><h3>Crew</h3><div id="manageCrew"></div></div></div></section>
+      </section>
+    </main>
+    <footer class="footer-bar"><a class="brand footer-brand" href="index.html"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a><p>Made with love (and a little chaos) by the crew.</p><div class="footer-links"><a href="activities.html">Activities</a><a href="store.html">Store</a><a href="index.html">Home</a></div><small>© <span data-year></span> Last Row</small></footer>
+  </div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

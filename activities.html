@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090d" />
+  <title>Plans & updates — Last Row</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Last Row home"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a>
+      <nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">Our story</a><a class="active" href="activities.html">Activities</a><a href="store.html">Store</a><a href="committee.html">The crew</a></nav>
+      <a class="nav-admin" href="admin.html">Admin <span aria-hidden="true">↗</span></a>
+    </header>
+    <main class="page-main">
+      <section class="page-hero activities-hero"><span class="eyebrow">Plans, dates & the latest</span><h1>Good things go<br /><em>on the calendar.</em></h1><p>Pick a date to see what we’re up to. And when it’s over, the memories and updates land right here.</p></section>
+      <section class="calendar-layout" aria-labelledby="calendarTitle">
+        <div class="calendar-card">
+          <div class="calendar-toolbar"><button class="icon-button" id="prevMonth" type="button" aria-label="Previous month">←</button><h2 id="calendarTitle" aria-live="polite"></h2><button class="icon-button" id="nextMonth" type="button" aria-label="Next month">→</button></div>
+          <div class="calendar-grid calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="calendar-grid" id="calendarDays" role="grid" aria-label="Event calendar"></div>
+          <p class="calendar-key"><span class="calendar-dot"></span> Plans on this day</p>
+        </div>
+        <aside class="selected-day-card" aria-live="polite"><span class="eyebrow">Your day, your plans</span><h2 id="selectedDateTitle">Choose a date</h2><div id="selectedDateEvents"><p class="muted-copy">Tap any day to see what’s happening.</p></div></aside>
+      </section>
+      <section class="section-block all-events"><div class="section-heading"><div><span class="eyebrow">Save the date</span><h2>Upcoming plans<span class="brand-dot">.</span></h2></div></div><div class="event-grid" id="allEvents" aria-live="polite"><p class="empty-state">Loading our plans…</p></div></section>
+      <section class="section-block updates-section" id="updates"><div class="section-heading"><div><span class="eyebrow">Camera roll & group chat</span><h2>Latest updates<span class="brand-dot">.</span></h2></div></div><div class="updates-grid" id="allNews" aria-live="polite"><p class="empty-state">Loading the latest…</p></div></section>
+    </main>
+    <footer class="footer-bar"><a class="brand footer-brand" href="index.html"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a><p>Made with love (and a little chaos) by the crew.</p><div class="footer-links"><a href="activities.html">Activities</a><a href="store.html">Store</a><a href="admin.html">Admin</a></div><small>© <span data-year></span> Last Row</small></footer>
+  </div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

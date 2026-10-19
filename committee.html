@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090d" />
+  <title>The crew — Last Row</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Last Row home"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a>
+      <nav aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">Our story</a><a href="activities.html">Activities</a><a href="store.html">Store</a><a class="active" href="committee.html">The crew</a></nav>
+      <a class="nav-admin" href="admin.html">Admin <span aria-hidden="true">↗</span></a>
+    </header>
+    <main class="page-main">
+      <section class="page-hero crew-hero"><span class="eyebrow">Meet your people</span><h1>The crew behind<br /><em>the group chat.</em></h1><p>Everyone brings their own thing. Together, we make the stories we’ll be telling for years.</p></section>
+      <section class="crew-grid" id="crewMembers" aria-live="polite">
+        <p class="empty-state">Loading the crew…</p>
+      </section>
+    </main>
+    <footer class="footer-bar"><a class="brand footer-brand" href="index.html"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a><p>Made with love (and a little chaos) by the crew.</p><div class="footer-links"><a href="activities.html">Activities</a><a href="store.html">Store</a><a href="admin.html">Admin</a></div><small>© <span data-year></span> Last Row</small></footer>
+  </div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>

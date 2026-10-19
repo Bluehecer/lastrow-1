@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09090d" />
+  <meta name="description" content="Last Row — good friends, shared stories, and things worth remembering." />
+  <title>Last Row — Friends, always</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Last Row home"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a>
+      <nav aria-label="Main navigation">
+        <a href="index.html" class="active">Home</a>
+        <a href="about.html">Our story</a>
+        <a href="activities.html">Activities</a>
+        <a href="store.html">Store</a>
+        <a href="committee.html">The crew</a>
+      </nav>
+      <a class="nav-admin" href="admin.html">Admin <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main>
+      <section class="home-hero">
+        <div class="hero-copy">
+          <span class="eyebrow"><span class="pulse-dot"></span> THE CREW · SINCE DAY ONE</span>
+          <h1>Same crew.<br />No matter what. <em>Last Row.</em></h1>
+          <p>A group of friends. Years of stories. Whatever comes next, we show up for each other.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="activities.html">See what’s happening <span>↗</span></a>
+            <a class="text-link" href="about.html">A little about us <span>→</span></a>
+          </div>
+          <div class="hero-note"><span class="note-star">LR</span><span>NO FORMALITIES.<br /><strong>JUST SHOW UP.</strong></span></div>
+        </div>
+        <div class="hero-art" aria-label="Illustration of friends hanging out">
+          <div class="art-sun"></div>
+          <div class="art-label art-label-top">the usual suspects</div>
+          <div class="art-orbit"></div>
+          <div class="art-person person-one"><span></span></div>
+          <div class="art-person person-two"><span></span></div>
+          <div class="art-person person-three"><span></span></div>
+          <div class="art-person person-four"><span></span></div>
+          <div class="art-spotlight">✳</div>
+          <div class="art-label art-label-bottom">since we met ♡</div>
+        </div>
+      </section>
+
+      <section class="ticker" aria-label="A note from the group">
+        <div>SAME CREW <span>//</span> NO FRONT ROW <span>//</span> NO FILTERS <span>//</span> ALWAYS SHOW UP <span>//</span> LAST ROW <span>//</span> SAME CREW <span>//</span></div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-heading">
+          <div><span class="eyebrow">The group chat, outside</span><h2>What’s coming up<span class="brand-dot">.</span></h2></div>
+          <a class="text-link" href="activities.html">All activities <span>→</span></a>
+        </div>
+        <div class="event-grid" id="homeEvents" aria-live="polite"><p class="empty-state">Loading our plans…</p></div>
+      </section>
+
+      <section class="memory-section">
+        <div class="memory-copy">
+          <span class="eyebrow">Little updates, big memories</span>
+          <h2>Life lately<span class="brand-dot">.</span></h2>
+          <p>Photo dumps, news, and the bits we want to remember. Fresh from the crew.</p>
+          <a class="text-link" href="activities.html#updates">Catch up with us <span>→</span></a>
+        </div>
+        <div class="news-grid" id="homeNews" aria-live="polite"><p class="empty-state">Loading the latest…</p></div>
+      </section>
+
+      <section class="closing-card">
+        <div><span class="eyebrow">You know the spot</span><h2>There’s always room<br />in the Last Row.</h2></div>
+        <a class="btn btn-light" href="about.html">Come say hi <span>↗</span></a>
+        <span class="closing-scribble" aria-hidden="true">♡</span>
+      </section>
+    </main>
+
+    <footer class="footer-bar">
+      <a class="brand footer-brand" href="index.html"><span class="brand-mark">LR</span><span>last row<span class="brand-dot">.</span></span></a>
+      <p>Made with love (and a little chaos) by the crew.</p>
+      <div class="footer-links"><a href="activities.html">Activities</a><a href="store.html">Store</a><a href="admin.html">Admin</a></div>
+      <small>© <span data-year></span> Last Row</small>
+    </footer>
+  </div>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
