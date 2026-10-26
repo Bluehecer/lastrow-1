@@ -1,19 +1,20 @@
 import { firebaseConfig } from './firebase-config.js';
+import { cloudinaryConfig } from './cloudinary-config.js';
 import { escapeDate, validatePublishingDate } from './admin-validation.mjs';
 import { deletePublishedContent } from './admin-delete.mjs';
 import { publishRecordWithOptionalMedia } from './admin-publish.mjs';
+import { uploadMediaToCloudinary } from './cloudinary-upload.mjs';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
 import {
   createUserWithEmailAndPassword, getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 import {
-  addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc
+  addDoc, collection, deleteDoc, deleteField, doc, getDoc, getFirestore, onSnapshot, serverTimestamp, setDoc, updateDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
 import {
-  deleteObject, getDownloadURL, getStorage, ref, uploadBytesResumable
+  deleteObject, getStorage, ref
 } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js';
 
-const MAX_MEDIA_BYTES = 50 * 1024 * 1024;
 const hasFirebaseConfig = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('YOUR_');
 let db;
 let auth;
@@ -320,9 +321,11 @@ function setupCrewForm() {
         if (!existing.exists()) throw new Error('That crew profile no longer exists. Refresh the page and try again.');
         oldMediaPath = existing.data().mediaPath;
         if (imageFile) {
-          uploaded = await uploadMedia(imageFile, user.uid);
-          Object.assign(payload, uploaded);
+          showStatus('Uploading crew photo to Cloudinary…');
+          uploaded = await uploadMedia(imageFile);
+          payload.mediaPath = deleteField();
         }
+        if (uploaded) Object.assign(payload, uploaded);
         await updateDoc(memberRef, payload);
         profileSaved = true;
         if (uploaded && oldMediaPath) {
@@ -338,9 +341,10 @@ function setupCrewForm() {
         showStatus(`${name}'s crew profile updated.`);
       } else {
         if (imageFile) {
-          uploaded = await uploadMedia(imageFile, user.uid);
-          Object.assign(payload, uploaded);
+          showStatus('Uploading crew photo to Cloudinary…');
+          uploaded = await uploadMedia(imageFile);
         }
+        if (uploaded) Object.assign(payload, uploaded);
         payload.createdAt = serverTimestamp();
         payload.createdBy = user.uid;
         await addDoc(collection(db, 'crew'), payload);
@@ -356,7 +360,10 @@ function setupCrewForm() {
           console.error('Could not clean up a crew photo upload:', cleanupError);
         }
       }
-      showStatus(`Could not save crew profile: ${error.message}`, true);
+      const orphanNote = uploaded && !uploaded.mediaPath
+        ? ' The photo was uploaded to Cloudinary but could not be attached; remove it from Cloudinary if you do not need it.'
+        : '';
+      showStatus(`Could not save crew profile: ${error.message}.${orphanNote}`, true);
     } finally {
       submit.disabled = false;
     }
@@ -481,20 +488,8 @@ function stopContentSubscriptions() {
   contentUnsubscribes = [];
 }
 
-async function uploadMedia(file, userId, onProgress) {
-  if (!file) return {};
-  if (file.size > MAX_MEDIA_BYTES) throw new Error('Please choose a photo or video smaller than 50 MB.');
-  if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) throw new Error('Choose an image or video file.');
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const mediaPath = `uploads/${userId}/${Date.now()}-${safeName}`;
-  const mediaRef = ref(storage, mediaPath);
-  const uploadTask = uploadBytesResumable(mediaRef, file, { contentType: file.type });
-  await new Promise((resolve, reject) => {
-    uploadTask.on('state_changed', (snapshot) => {
-      onProgress?.(snapshot.bytesTransferred, snapshot.totalBytes);
-    }, reject, resolve);
-  });
-  return { mediaUrl: await getDownloadURL(mediaRef), mediaPath, mediaType: file.type };
+async function uploadMedia(file) {
+  return uploadMediaToCloudinary(file, cloudinaryConfig);
 }
 
 function setupAdmin() {
@@ -634,10 +629,11 @@ function setupAdmin() {
       showStatus(collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing…');
       let publishingStage = 'publishing';
       const slowPublishTimer = window.setTimeout(() => {
-        const message = `Still ${publishingStage}—Firebase is taking longer than expected. Keep this page open and don’t click again yet.`;
+        const message = `Still ${publishingStage}—this is taking longer than expected. Keep this page open and don’t click again yet.`;
         if (feedback) feedback.textContent = message;
         showStatus(message);
       }, 20000);
+      let mediaUploaded = false;
       try {
         const date = String(formData.get('date') || '');
         validatePublishingDate(collectionName, date);
@@ -648,54 +644,44 @@ function setupAdmin() {
         const mediaFile = file instanceof File && file.size ? file : null;
         publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
         const savingMessage = collectionName === 'products' ? 'Saving product to the store…' : 'Saving to the site…';
-        if (feedback) feedback.textContent = savingMessage;
-        showStatus(savingMessage);
         const result = await publishRecordWithOptionalMedia(
-          () => addDoc(collection(db, collectionName), {
-            ...payload,
-            createdAt: serverTimestamp(),
-            createdBy: user.uid
-          }),
+          (media) => {
+            publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
+            if (feedback) feedback.textContent = savingMessage;
+            showStatus(savingMessage);
+            return addDoc(collection(db, collectionName), {
+              ...payload,
+              ...media,
+              createdAt: serverTimestamp(),
+              createdBy: user.uid
+            });
+          },
           Boolean(mediaFile),
           async () => {
-            publishingStage = 'uploading your photo';
-            const updateUploadProgress = (transferred, total) => {
-              const percentage = Math.floor(transferred / total * 100);
-              const message = `Uploading photo… ${percentage}%`;
-              if (feedback) feedback.textContent = message;
-              showStatus(message);
-            };
-            updateUploadProgress(0, mediaFile.size);
-            return uploadMedia(mediaFile, user.uid, updateUploadProgress);
-          },
-          (record, media) => {
-            publishingStage = collectionName === 'products' ? 'adding the photo to your product' : 'adding the media to your post';
-            return updateDoc(record, media);
-          },
-          (media) => deleteObject(ref(storage, media.mediaPath))
+            publishingStage = 'uploading media';
+            const message = 'Uploading media to Cloudinary…';
+            if (feedback) feedback.textContent = message;
+            showStatus(message);
+            const media = await uploadMedia(mediaFile);
+            mediaUploaded = true;
+            return media;
+          }
         );
         form.reset();
-        if (result.mediaError) {
-          const cleanupNote = result.cleanupError ? ` Media cleanup also failed: ${result.cleanupError.message}.` : '';
-          const message = `${collectionName === 'products' ? 'Product' : 'Content'} published, but its photo or video could not be attached: ${result.mediaError.message}.${cleanupNote}`;
-          if (feedback) {
-            feedback.dataset.state = 'error';
-            feedback.textContent = message;
-          }
-          showStatus(message, true);
-          return;
-        }
         if (feedback) {
           feedback.dataset.state = 'success';
           feedback.textContent = collectionName === 'products' ? 'Product published and live in the store.' : 'Published and live on the site.';
         }
         showStatus('Published. It’s live on the site.');
       } catch (error) {
+        const orphanNote = mediaUploaded
+          ? ' The media reached Cloudinary, but the post could not be saved; remove the unused file from Cloudinary if needed.'
+          : '';
         if (feedback) {
           feedback.dataset.state = 'error';
-          feedback.textContent = `Could not publish: ${error.message}`;
+          feedback.textContent = `Could not publish: ${error.message}.${orphanNote}`;
         }
-        showStatus(`Could not publish: ${error.message}`, true);
+        showStatus(`Could not publish: ${error.message}.${orphanNote}`, true);
       } finally {
         window.clearTimeout(slowPublishTimer);
         submit.disabled = false;

@@ -1,28 +1,42 @@
-# Last Row Firebase setup
+# Last Row setup
 
-The site uses Firebase Authentication, Cloud Firestore, and Cloud Storage. The Firebase web app settings are in `firebase-config.js`; they are public client settings, not admin credentials.
+The site uses Firebase Authentication and Cloud Firestore for accounts and content. Images and videos are uploaded directly to Cloudinary before the corresponding Firestore record is created or updated. Firebase Storage is not required for new uploads.
 
-## One-time deployment
+## Configure Cloudinary uploads
 
-1. In Firebase Console for project `lastrow-8e1d2`, enable **Authentication → Email/Password**, create a Firestore database, and enable Storage.
+1. Create a Cloudinary account and choose its free plan. The free plan has usage limits; check the current limits in your Cloudinary dashboard and avoid uploading media you do not need.
+2. In **Settings → Upload → Upload presets**, create an unsigned upload preset. Restrict allowed formats to the image and video types the site needs, set a maximum file size of 50 MB, and use a dedicated folder such as `lastrow`.
+3. Copy the Cloud name from the Cloudinary dashboard and the preset name into `cloudinary-config.js`:
+   ```js
+   export const cloudinaryConfig = {
+     cloudName: 'YOUR_CLOUD_NAME',
+     uploadPreset: 'YOUR_UNSIGNED_UPLOAD_PRESET'
+   };
+   ```
+   The cloud name and unsigned preset are public client configuration, not secret credentials. Never put a Cloudinary API secret in this website.
+4. The upload preset is publicly usable by design. Restrict formats, size, transformations, and other preset options in Cloudinary to reduce abuse and unexpected usage.
+
+The admin portal uploads selected media first and only writes to Firestore after Cloudinary returns a secure URL. If the upload fails, no content record is created. If Cloudinary succeeds but Firestore rejects the save, the uploaded file may remain unused in Cloudinary; the portal reports this so it can be removed from the Cloudinary dashboard.
+
+Deleting a post or crew profile removes its Firestore record, not the Cloudinary asset. Unsigned browser uploads cannot securely delete Cloudinary assets without a server-side signing service, so remove unwanted files from the Cloudinary dashboard. Older records that still contain Firebase Storage paths may likewise need manual cleanup.
+
+## Firebase setup and deployment
+
+1. In Firebase Console for project `lastrow-8e1d2`, enable **Authentication → Email/Password** and create a Firestore database.
 2. Install Node.js and the Firebase CLI if they are not already installed:
    ```powershell
    npm install -g firebase-tools
    firebase login
    ```
-3. Open PowerShell in this website folder and deploy the database and storage rules:
+3. Open PowerShell in this website folder and deploy the Firestore rules:
    ```powershell
-   firebase deploy --only firestore:rules,storage
+   firebase deploy --only firestore:rules
    ```
-   The Storage rules check the same `adminRequests/{uid}.approved` Firestore record as the portal. Firebase may prompt you to enable the required cross-service permissions between Cloud Storage and Firestore; approve that prompt for uploads and deletes to use the portal's admin approvals.
 4. To grant the first admin, open **Firestore Database → Data**. Create or open the `adminRequests` collection, then create a document whose ID is that account's Firebase Authentication UID. Add fields: `uid` (string, same UID), `email` (string), `approved` (boolean `true`), and `requestedAt` (timestamp). If the account has already requested access, open its existing document and change `approved` from `false` to `true`.
-5. Sign in to the admin page with that account and refresh the page. The approved document is the admin role.
-6. Other people can create an account or sign in with an existing Firebase Authentication account, then request access. An existing admin approves requests in **Pending approvals**. The user should refresh the portal after approval.
-7. Host the site over HTTP(S), not by opening HTML files with `file://`.
+5. Sign in to the admin page with that account and refresh the page. The approved document is the admin role. Other people can create an account or sign in, then request approval from an existing admin.
+6. Host the site over HTTP(S), not by opening HTML files with `file://`.
 
-An approved `adminRequests/{uid}` document is the role record. Website users can create only their own requests with `approved: false`; they cannot approve themselves. Existing admins can approve requests in the portal, and a project owner can grant the first admin directly in Firebase Console. Approval grants full admin access (publishing, deleting content, editing crew profiles, and approving further accounts), so only approve people you trust.
-
-Firestore and Storage rules permit public reads of published content and restrict writes/uploads to approved admins. Storage checks the approved `adminRequests/{uid}` record server-side; it does not rely on client-provided state or an Authentication custom claim. Admins can manage crew profiles, including photos, from the portal. Uploaded media is limited to 50 MB. The store is a catalog; checkout and payment processing are not included.
+Firestore permits public reads of published content and restricts writes to approved admins. The store is a catalog; checkout and payment processing are not included.
 
 ## Managing the crew page
 
