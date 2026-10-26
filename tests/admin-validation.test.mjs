@@ -79,3 +79,11 @@ test('store displays skeleton cards until products load and respects reduced mot
   assert.match(styles, /:hover \.product-media \{ transform: scale\(1\.035\)/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });
+
+test('mobile layouts use fresh assets and the store note icon is drawn with CSS', () => {
+  assert.match(storeHtml, /store-note-icon" aria-hidden="true"><\/span>/);
+  assert.doesNotMatch(storeHtml, /store-note-icon">✳/);
+  assert.match(styles, /@media \(max-width: 680px\) \{[\s\S]*?\.product-grid \{ gap: 0\.9rem; \}/);
+  assert.match(styles, /@media \(max-width: 380px\)/);
+  assert.match(styles, /linear-gradient\(-45deg, transparent 47%, #ff678b 48% 52%, transparent 53%\)/);
+});

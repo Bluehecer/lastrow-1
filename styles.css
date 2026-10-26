@@ -816,7 +816,18 @@ main { padding: 2rem clamp(1rem, 5vw, 5rem); }
 .product-price { color: #ff8ca9; white-space: nowrap; font-weight: 700; }
 .product-copy p { color: var(--muted); line-height: 1.6; }
 .store-note { display: flex; gap: 1rem; align-items: center; padding: 1.4rem; margin: 3rem 0 0; border-radius: 18px; border: 1px solid var(--border); background: rgba(71, 27, 86, 0.48); }
-.store-note-icon { color: #ff678b; font-size: 2.4rem; }
+.store-note-icon {
+  display: block;
+  flex: 0 0 2.2rem;
+  width: 2.2rem;
+  height: 2.2rem;
+  background:
+    radial-gradient(circle, #ff678b 0 2px, transparent 2.5px),
+    linear-gradient(#ff678b, #ff678b) center / 2px 100% no-repeat,
+    linear-gradient(90deg, #ff678b, #ff678b) center / 100% 2px no-repeat,
+    linear-gradient(45deg, transparent 47%, #ff678b 48% 52%, transparent 53%) center / 100% 100% no-repeat,
+    linear-gradient(-45deg, transparent 47%, #ff678b 48% 52%, transparent 53%) center / 100% 100% no-repeat;
+}
 .store-note h2 { margin: 0 0 0.4rem; font-size: 1.3rem; }
 .store-note p { margin: 0; color: var(--muted); line-height: 1.7; }
 .admin-hero { padding-top: 3rem; padding-bottom: 3rem; }
@@ -879,6 +890,66 @@ main { padding: 2rem clamp(1rem, 5vw, 5rem); }
   .footer-bar small { width: 100%; }
   .form-grid { grid-template-columns: 1fr; }
   .full-field { grid-column: auto; }
+}
+
+@media (max-width: 680px) {
+  html, body { width: 100%; overflow-x: clip; }
+  main { padding: 1.25rem 1rem; }
+  .page-main { padding: 0.75rem 1rem 2rem; }
+  .topbar { gap: 0.55rem; padding: 0.7rem 1rem; }
+  .brand { min-width: 0; gap: 0.45rem; font-size: 0.78rem; letter-spacing: 0.08em; }
+  .brand-mark { flex: 0 0 32px; width: 32px; height: 32px; }
+  .nav-admin { min-height: 40px; display: inline-flex; align-items: center; padding: 0.45rem 0.6rem; font-size: 0.76rem; }
+  .topbar nav { gap: 0.15rem; scrollbar-width: none; }
+  .topbar nav::-webkit-scrollbar { display: none; }
+  .topbar nav a { min-height: 40px; display: inline-flex; align-items: center; padding: 0.45rem 0.6rem; font-size: 0.78rem; }
+  .home-hero { min-height: 0; gap: 1.5rem; padding: 1.5rem 0 2rem; }
+  .hero-copy h1, .page-hero h1 { font-size: clamp(2.6rem, 12vw, 4rem); line-height: 0.98; }
+  .hero-copy p, .page-hero p { max-width: 100%; font-size: 0.95rem; line-height: 1.65; }
+  .hero-actions { align-items: flex-start; gap: 0.9rem; }
+  .btn { min-height: 44px; }
+  .hero-art { min-height: 270px; margin: 0; }
+  .ticker { overflow: hidden; }
+  .ticker > div { white-space: nowrap; }
+  .section-block { padding-top: 2.25rem; }
+  .section-heading { align-items: flex-start; gap: 0.6rem; margin-bottom: 1.2rem; }
+  .section-heading h2, .memory-copy h2 { font-size: clamp(1.8rem, 9vw, 2.5rem); }
+  .event-grid, .product-grid, .story-grid, .crew-grid, .updates-grid, .news-grid, .calendar-layout, .admin-columns, .manage-grid, .memory-section { grid-template-columns: minmax(0, 1fr); }
+  .product-grid { gap: 0.9rem; }
+  .product-visual { height: clamp(190px, 62vw, 280px); }
+  .product-copy { padding: 1rem; }
+  .store-note { align-items: flex-start; gap: 0.8rem; padding: 1rem; margin-top: 2rem; }
+  .store-note-icon { flex-basis: 1.8rem; width: 1.8rem; height: 1.8rem; }
+  .store-note h2 { font-size: 1.15rem; }
+  .store-note p { font-size: 0.9rem; }
+  .page-hero { padding: 1.75rem 1.15rem; margin: 0.5rem 0 1.5rem; border-radius: 8px; }
+  .hero-sticker { position: static; display: inline-block; margin-top: 1rem; padding: 0.55rem 0.75rem; border-radius: 4px; transform: none; }
+  .story-card { min-height: 210px; padding: 1.25rem; }
+  .closing-card { gap: 1rem; padding: 1.5rem 1.15rem; margin-top: 3rem; }
+  .memory-section { gap: 1rem; }
+  .footer-bar { align-items: flex-start; flex-direction: column; gap: 0.85rem; padding: 1.5rem 1rem; }
+  .footer-bar p { line-height: 1.55; }
+  .footer-links { flex-wrap: wrap; gap: 0.6rem 1rem; }
+  .admin-login-card, .admin-panel { padding: 1rem; border-radius: 8px; }
+  .dashboard-heading { align-items: flex-start; gap: 0.75rem; }
+  .dashboard-heading .btn { flex: 0 0 auto; }
+  .form-grid { gap: 0.85rem; }
+  .form-grid input, .form-grid textarea { min-height: 44px; padding: 0.7rem; }
+  .form-grid textarea { min-height: 6rem; }
+  .approval-row { align-items: flex-start; }
+  .manage-row { align-items: center; gap: 0.35rem; overflow-wrap: anywhere; }
+  .manage-actions { flex: 0 0 auto; }
+  .calendar-card, .selected-day-card { padding: 0.85rem; }
+  .calendar-grid { gap: 0.2rem; }
+  .calendar-day, .calendar-blank { min-height: 40px; }
+}
+
+@media (max-width: 380px) {
+  .topbar { padding-right: 0.75rem; padding-left: 0.75rem; }
+  .brand { font-size: 0.72rem; letter-spacing: 0.04em; }
+  .nav-admin { padding-right: 0.45rem; padding-left: 0.45rem; font-size: 0.72rem; }
+  .topbar nav a { padding-right: 0.5rem; padding-left: 0.5rem; font-size: 0.74rem; }
+  .product-heading { flex-wrap: wrap; }
 }
 
 /* Hard-edged, low-light treatment: keep the neon as an accent, not the whole surface. */
