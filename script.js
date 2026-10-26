@@ -96,6 +96,14 @@ function renderProduct(item) {
   const card = element('article', 'product-card');
   const visual = element('div', 'product-visual');
   addMedia(visual, item, 'product-media');
+  const productImage = $('.product-media', visual);
+  if (productImage) {
+    productImage.style.setProperty('width', '100%', 'important');
+    productImage.style.setProperty('height', '100%', 'important');
+    productImage.style.setProperty('max-width', '100%', 'important');
+    productImage.style.setProperty('max-height', '100%', 'important');
+    productImage.style.setProperty('object-fit', 'contain', 'important');
+  }
   if (!item.mediaUrl) visual.append(element('span', 'product-placeholder', 'LR'));
   card.append(visual);
   const copy = element('div', 'product-copy');
