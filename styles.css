@@ -791,7 +791,7 @@ main { padding: 2rem clamp(1rem, 5vw, 5rem); }
 .product-card { overflow: hidden; border-radius: 20px; background: #21122b; border: 1px solid var(--border); }
 .product-visual { position: relative; height: 230px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 50% 38%, rgba(245, 75, 143, 0.4), transparent 43%), linear-gradient(145deg, #50206f, #27132f); }
 .product-placeholder { color: rgba(255,255,255,0.8); font-size: 3.5rem; font-weight: 800; text-shadow: 0 0 28px #ff426f; }
-.product-media { width: 100%; height: 100%; object-fit: cover; }
+.product-media { width: 100%; height: 100%; object-fit: contain; }
 .product-copy { padding: 1.2rem; }
 .product-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
 .product-heading h3 { margin: 0; }
