@@ -36,37 +36,43 @@
         <div class="dashboard-heading"><div><span class="eyebrow">Your little corner of the site</span><h2>Hey, admin<span class="brand-dot">.</span></h2></div><button class="btn btn-outline" type="button" id="logoutButton">Sign out</button></div>
         <div class="admin-columns">
           <section class="admin-panel">
-            <span class="eyebrow">Put it on the calendar</span><h2>Add an event</h2>
+            <span class="eyebrow">Put it on the calendar</span><h2 id="eventFormTitle">Add an event</h2>
             <form id="eventForm" class="form-grid">
+              <input name="recordId" type="hidden" />
               <label>Event name<input name="title" maxlength="100" required /></label>
               <label>When<input name="date" type="date" required /></label>
               <label>Time (optional)<input name="time" type="time" /></label>
               <label>Where<input name="location" maxlength="120" /></label>
               <label class="full-field">A few details<textarea name="description" rows="3" maxlength="1000" required></textarea></label>
-              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB.</small></label>
+              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB. When editing, leave empty to keep the current media.</small></label>
               <button class="btn btn-primary" type="submit">Publish event <span>↗</span></button>
+              <button class="btn btn-outline cancel-content-edit" type="button" hidden>Cancel edit</button>
               <p class="publish-feedback full-field" role="status" aria-live="polite" hidden></p>
             </form>
           </section>
           <section class="admin-panel">
-            <span class="eyebrow">A note from us</span><h2>Post an update</h2>
+            <span class="eyebrow">A note from us</span><h2 id="newsFormTitle">Post an update</h2>
             <form id="newsForm" class="form-grid">
+              <input name="recordId" type="hidden" />
               <label>Headline<input name="title" maxlength="100" required /></label>
               <label>Date<input name="date" type="date" required /></label>
               <label class="full-field">What’s the story?<textarea name="body" rows="4" maxlength="2000" required></textarea></label>
-              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB.</small></label>
+              <label class="full-field">Photo or video (optional)<input name="media" type="file" accept="image/*,video/*" /><small>Images or videos up to 50 MB. When editing, leave empty to keep the current media.</small></label>
               <button class="btn btn-primary" type="submit">Share update <span>↗</span></button>
+              <button class="btn btn-outline cancel-content-edit" type="button" hidden>Cancel edit</button>
               <p class="publish-feedback full-field" role="status" aria-live="polite" hidden></p>
             </form>
           </section>
           <section class="admin-panel">
-            <span class="eyebrow">Something for the shop</span><h2>Add a product</h2>
+            <span class="eyebrow">Something for the shop</span><h2 id="productFormTitle">Add a product</h2>
             <form id="productForm" class="form-grid">
+              <input name="recordId" type="hidden" />
               <label>Product name<input name="title" maxlength="100" required /></label>
               <label>Price<input name="price" type="number" min="0" step="0.01" required /></label>
               <label class="full-field">Description<textarea name="description" rows="3" maxlength="1000" required></textarea></label>
-              <label class="full-field">Product photo (optional)<input name="media" type="file" accept="image/*" /><small>Images up to 50 MB.</small></label>
+              <label class="full-field">Product photo (optional)<input name="media" type="file" accept="image/*" /><small>Images up to 50 MB. When editing, leave empty to keep the current photo.</small></label>
               <button class="btn btn-primary" type="submit">Add to store <span>↗</span></button>
+              <button class="btn btn-outline cancel-content-edit" type="button" hidden>Cancel edit</button>
               <p class="publish-feedback full-field" role="status" aria-live="polite" hidden></p>
             </form>
           </section>

@@ -193,6 +193,11 @@ function renderManageList(collectionName, items, target) {
   items.forEach((item) => {
     const row = element('div', 'manage-row');
     row.append(element('span', '', item.title));
+    const actions = element('div', 'manage-actions');
+    const edit = element('button', 'delete-button manage-edit', 'Edit');
+    edit.type = 'button';
+    edit.addEventListener('click', () => beginContentEdit(collectionName, item));
+    actions.append(edit);
     const button = element('button', 'delete-button', 'Delete');
     button.type = 'button';
     button.addEventListener('click', async () => {
@@ -215,9 +220,42 @@ function renderManageList(collectionName, items, target) {
         showStatus(`Could not delete content: ${error.message}`, true);
       }
     });
-    row.append(button);
+    actions.append(button);
+    row.append(actions);
     list.append(row);
   });
+}
+
+function beginContentEdit(collectionName, item) {
+  const formIds = { events: 'eventForm', news: 'newsForm', products: 'productForm' };
+  const titleIds = { events: 'eventFormTitle', news: 'newsFormTitle', products: 'productFormTitle' };
+  const buttonLabels = { events: 'Save event', news: 'Save update', products: 'Save product' };
+  const form = $(`#${formIds[collectionName]}`);
+  if (!form) return;
+
+  form.reset();
+  form.elements.namedItem('recordId').value = item.id;
+  Object.entries(item).forEach(([name, value]) => {
+    const field = form.elements.namedItem(name);
+    if (field && typeof value !== 'object' && name !== 'id') field.value = value ?? '';
+  });
+  $(`#${titleIds[collectionName]}`).textContent = `Edit ${item.title}`;
+  $('button[type="submit"]', form).textContent = buttonLabels[collectionName];
+  $('.cancel-content-edit', form).hidden = false;
+  $('.publish-feedback', form).hidden = true;
+  form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function resetContentForm(form, defaultTitle, defaultButton) {
+  form.reset();
+  form.elements.namedItem('recordId').value = '';
+  $(`#${form.id}Title`).textContent = defaultTitle;
+  $('button[type="submit"]', form).textContent = defaultButton;
+  $('.cancel-content-edit', form).hidden = true;
+  const feedback = $('.publish-feedback', form);
+  feedback.hidden = true;
+  feedback.textContent = '';
+  feedback.dataset.state = '';
 }
 
 function renderCrewManageList(items) {
@@ -597,11 +635,15 @@ function setupAdmin() {
   setupCrewForm();
 
   [
-    { id: 'eventForm', collectionName: 'events', fields: ['title', 'date', 'time', 'location', 'description'] },
-    { id: 'newsForm', collectionName: 'news', fields: ['title', 'date', 'body'] },
-    { id: 'productForm', collectionName: 'products', fields: ['title', 'price', 'description'] }
-  ].forEach(({ id, collectionName, fields }) => {
+    { id: 'eventForm', collectionName: 'events', fields: ['title', 'date', 'time', 'location', 'description'], title: 'Add an event', button: 'Publish event ↗', success: 'Event' },
+    { id: 'newsForm', collectionName: 'news', fields: ['title', 'date', 'body'], title: 'Post an update', button: 'Share update ↗', success: 'Update' },
+    { id: 'productForm', collectionName: 'products', fields: ['title', 'price', 'description'], title: 'Add a product', button: 'Add to store ↗', success: 'Product' }
+  ].forEach((formConfig) => {
+    const { id, collectionName, fields } = formConfig;
     const form = $(`#${id}`);
+    const defaultSubmitContent = $('button[type="submit"]', form).innerHTML;
+    const cancelButton = $('.cancel-content-edit', form);
+    cancelButton.addEventListener('click', () => resetContentForm(form, formConfig.title, formConfig.button));
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       const submit = $('button[type="submit"]', form);
@@ -617,23 +659,27 @@ function setupAdmin() {
         return;
       }
       const formData = new FormData(form);
+      const recordId = String(formData.get('recordId') || '');
       const submitContent = submit.innerHTML;
       submit.disabled = true;
+      cancelButton.disabled = true;
       submit.classList.add('is-publishing');
       submit.innerHTML = '<span class="publish-spinner" aria-hidden="true"></span> Publishing…';
       if (feedback) {
         feedback.hidden = false;
         feedback.dataset.state = 'pending';
-        feedback.textContent = collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing to the site…';
+        feedback.textContent = recordId ? `Updating ${formConfig.success.toLowerCase()}…` : collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing to the site…';
       }
-      showStatus(collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing…');
-      let publishingStage = 'publishing';
+      showStatus(recordId ? `Updating ${formConfig.success.toLowerCase()}…` : collectionName === 'products' ? 'Publishing product to the store…' : 'Publishing…');
+      let publishingStage = recordId ? 'updating content' : 'publishing';
       const slowPublishTimer = window.setTimeout(() => {
         const message = `Still ${publishingStage}—this is taking longer than expected. Keep this page open and don’t click again yet.`;
         if (feedback) feedback.textContent = message;
         showStatus(message);
       }, 20000);
       let mediaUploaded = false;
+      let previousMedia;
+      let mediaCleanupError;
       try {
         const date = String(formData.get('date') || '');
         validatePublishingDate(collectionName, date);
@@ -642,16 +688,29 @@ function setupAdmin() {
         if (collectionName === 'products' && (!Number.isFinite(payload.price) || payload.price < 0)) throw new Error('Enter a valid price.');
         const file = formData.get('media');
         const mediaFile = file instanceof File && file.size ? file : null;
-        publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
-        const savingMessage = collectionName === 'products' ? 'Saving product to the store…' : 'Saving to the site…';
-        const result = await publishRecordWithOptionalMedia(
+        if (recordId && mediaFile) {
+          const existing = await getDoc(doc(db, collectionName, recordId));
+          if (!existing.exists()) throw new Error('That item no longer exists. Refresh the page and try again.');
+          previousMedia = existing.data();
+        }
+        publishingStage = recordId ? 'saving your changes' : collectionName === 'products' ? 'saving your product' : 'saving your post';
+        const savingMessage = recordId
+          ? 'Saving your changes…'
+          : collectionName === 'products'
+            ? 'Saving product to the store…'
+            : 'Saving to the site…';
+        await publishRecordWithOptionalMedia(
           (media) => {
-            publishingStage = collectionName === 'products' ? 'saving your product' : 'saving your post';
+            publishingStage = recordId ? 'saving your changes' : collectionName === 'products' ? 'saving your product' : 'saving your post';
             if (feedback) feedback.textContent = savingMessage;
             showStatus(savingMessage);
+            const recordData = { ...payload, ...media, updatedAt: serverTimestamp() };
+            if (recordId) {
+              if (mediaFile) recordData.mediaPath = deleteField();
+              return updateDoc(doc(db, collectionName, recordId), recordData);
+            }
             return addDoc(collection(db, collectionName), {
-              ...payload,
-              ...media,
+              ...recordData,
               createdAt: serverTimestamp(),
               createdBy: user.uid
             });
@@ -667,12 +726,27 @@ function setupAdmin() {
             return media;
           }
         );
-        form.reset();
+        if (recordId && mediaUploaded && previousMedia?.mediaPath) {
+          try {
+            await deleteObject(ref(storage, previousMedia.mediaPath));
+          } catch (error) {
+            console.error('Content was updated, but its previous Firebase Storage media could not be deleted:', error);
+            mediaCleanupError = error;
+          }
+        }
+        resetContentForm(form, formConfig.title, formConfig.button);
         if (feedback) {
           feedback.dataset.state = 'success';
-          feedback.textContent = collectionName === 'products' ? 'Product published and live in the store.' : 'Published and live on the site.';
+          feedback.hidden = false;
+          feedback.textContent = recordId ? `${formConfig.success} updated.` : collectionName === 'products' ? 'Product published and live in the store.' : 'Published and live on the site.';
         }
-        showStatus('Published. It’s live on the site.');
+        if (mediaCleanupError) {
+          showStatus(`${formConfig.success} updated, but its previous media could not be cleaned up: ${mediaCleanupError.message}`, true);
+        } else if (!previousMedia?.mediaPath && previousMedia?.mediaPublicId && mediaUploaded) {
+          showStatus(`${formConfig.success} updated. Remove the replaced media from Cloudinary if you no longer need it.`);
+        } else {
+          showStatus(recordId ? `${formConfig.success} updated.` : 'Published. It’s live on the site.');
+        }
       } catch (error) {
         const orphanNote = mediaUploaded
           ? ' The media reached Cloudinary, but the post could not be saved; remove the unused file from Cloudinary if needed.'
@@ -685,8 +759,9 @@ function setupAdmin() {
       } finally {
         window.clearTimeout(slowPublishTimer);
         submit.disabled = false;
+        cancelButton.disabled = false;
         submit.classList.remove('is-publishing');
-        submit.innerHTML = submitContent;
+        submit.innerHTML = form.elements.namedItem('recordId').value ? submitContent : defaultSubmitContent;
       }
     });
   });

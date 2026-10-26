@@ -831,6 +831,7 @@ main { padding: 2rem clamp(1rem, 5vw, 5rem); }
 .manage-grid h3 { color: #efbdff; }
 .manage-row { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.7rem 0; border-bottom: 1px solid rgba(217, 144, 255, 0.13); color: #eadcf0; font-size: 0.83rem; }
 .delete-button { color: #ff9cb2; border: 0; background: transparent; cursor: pointer; }
+.manage-edit { color: #d39bea; }
 [hidden] { display: none !important; }
 
 @media (max-width: 900px) {

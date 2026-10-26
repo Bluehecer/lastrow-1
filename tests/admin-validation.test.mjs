@@ -52,6 +52,17 @@ test('publishing shows an animated in-form progress state and reports the result
   assert.match(script, /Uploading media to Cloudinary…/);
   assert.match(script, /Saving product to the store…/);
   assert.match(script, /Keep this page open and don’t click again yet\./);
-  assert.match(script, /\.\.\.payload,\s*\.\.\.media,\s*createdAt: serverTimestamp\(\)/);
+  assert.match(script, /\.\.\.payload,\s*\.\.\.media,\s*updatedAt: serverTimestamp\(\)/);
   assert.match(script, /publishRecordWithOptionalMedia/);
+});
+
+test('published events, updates, and products can be edited in their existing forms', () => {
+  for (const formId of ['eventForm', 'newsForm', 'productForm']) {
+    const form = adminHtml.match(new RegExp(`<form id="${formId}"[\\s\\S]*?<\\/form>`))?.[0];
+    assert.match(form, /name="recordId"/);
+    assert.match(form, /class="btn btn-outline cancel-content-edit" type="button" hidden>Cancel edit/);
+  }
+  assert.match(script, /beginContentEdit\(collectionName, item\)/);
+  assert.match(script, /updateDoc\(doc\(db, collectionName, recordId\), recordData\)/);
+  assert.match(script, /resetContentForm\(form, formConfig\.title, formConfig\.button\)/);
 });
