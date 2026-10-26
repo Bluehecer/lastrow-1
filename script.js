@@ -495,6 +495,8 @@ function subscribeToContent() {
         setCards('#allNews', recent, renderNewsCard, 'No updates yet. The next good story will show up here.');
         renderManageList(name, items, '#manageNews');
       } else if (name === 'products') {
+        const products = $('#products');
+        if (products) products.setAttribute('aria-busy', 'false');
         setCards('#products', items, renderProduct, 'The shop is having a quiet moment. Check back soon.');
         renderManageList(name, items, '#manageProducts');
       } else {
@@ -514,7 +516,10 @@ function subscribeToContent() {
       selectors
         .forEach((selector) => {
           const container = $(selector);
-          if (container) container.replaceChildren(element('p', 'empty-state', `Could not load ${name}. Please try again later.`));
+          if (container) {
+            container.replaceChildren(element('p', 'empty-state', `Could not load ${name}. Please try again later.`));
+            if (name === 'products') container.setAttribute('aria-busy', 'false');
+          }
         });
       if (name === 'crew') {
         const list = $('#manageCrew');
@@ -797,7 +802,10 @@ document.addEventListener('DOMContentLoaded', () => {
     showStatus('Firebase is not configured yet. Add your project settings to firebase-config.js.', true);
     ['#homeEvents', '#allEvents', '#homeNews', '#allNews', '#products'].forEach((selector) => {
       const container = $(selector);
-      if (container) container.replaceChildren(element('p', 'empty-state', 'Connect Firebase to share the crew’s latest plans and stories.'));
+      if (container) {
+        container.replaceChildren(element('p', 'empty-state', 'Connect Firebase to share the crew’s latest plans and stories.'));
+        if (selector === '#products') container.setAttribute('aria-busy', 'false');
+      }
     });
     return;
   }
@@ -811,5 +819,10 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (error) {
     console.error('Firebase initialization failed:', error);
     showStatus(`Could not connect to Firebase: ${error.message}`, true);
+    const products = $('#products');
+    if (products) {
+      products.replaceChildren(element('p', 'empty-state', 'Could not connect to the store. Please try again later.'));
+      products.setAttribute('aria-busy', 'false');
+    }
   }
 });

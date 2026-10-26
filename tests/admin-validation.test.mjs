@@ -5,6 +5,8 @@ import { escapeDate, validatePublishingDate } from '../admin-validation.mjs';
 
 const script = await readFile(new URL('../script.js', import.meta.url), 'utf8');
 const adminHtml = await readFile(new URL('../admin.html', import.meta.url), 'utf8');
+const storeHtml = await readFile(new URL('../store.html', import.meta.url), 'utf8');
+const styles = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
 
 test('products can publish without a date while events and news still require one', () => {
   assert.doesNotThrow(() => validatePublishingDate('products', ''));
@@ -65,4 +67,15 @@ test('published events, updates, and products can be edited in their existing fo
   assert.match(script, /beginContentEdit\(collectionName, item\)/);
   assert.match(script, /updateDoc\(doc\(db, collectionName, recordId\), recordData\)/);
   assert.match(script, /resetContentForm\(form, formConfig\.title, formConfig\.button\)/);
+});
+
+test('store displays skeleton cards until products load and respects reduced motion', () => {
+  const productGrid = storeHtml.match(/<div class="product-grid" id="products"[\s\S]*?<\/div><\/section>/)?.[0];
+  assert.ok(productGrid, 'store product grid exists');
+  assert.match(productGrid, /aria-busy="true"/);
+  assert.equal((productGrid.match(/class="product-card product-skeleton"/g) || []).length, 3);
+  assert.match(script, /products\.setAttribute\('aria-busy', 'false'\)/);
+  assert.match(styles, /\.product-card:not\(\.product-skeleton\):hover \{ transform: translateY\(-4px\)/);
+  assert.match(styles, /:hover \.product-media \{ transform: scale\(1\.035\)/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
 });
